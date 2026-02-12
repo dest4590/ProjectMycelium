@@ -36,3 +36,5 @@ structures and build complex, non-obvious network topologies.
 ### TL;DR
 
 `Mycelium` is a specialized analytical environment for deep social graph research and digital relationship intelligence.
+
+https://github.com/user-attachments/assets/3a7f37b0-2979-4655-8351-d488d48959e6
