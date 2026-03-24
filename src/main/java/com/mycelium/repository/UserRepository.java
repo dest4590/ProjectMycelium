@@ -76,7 +76,7 @@ public interface UserRepository extends Neo4jRepository<UserNode, String> {
     @Query("MATCH (p:Project {name: $projectName}) " +
             "MATCH (startNode:User {username: $startUsername})-[:BELONGS_TO]->(p), " +
             "(endNode:User {username: $endUsername})-[:BELONGS_TO]->(p) " +
-            "MATCH path = shortestPath((startNode)-[:FOLLOWS*]-(endNode)) " +
+            "MATCH path = shortestPath((startNode)-[:FOLLOWS*..15]-(endNode)) " +
             "UNWIND nodes(path) AS user " +
             "RETURN user.username")
     List<String> findShortestPathInProject(String startUsername, String endUsername, String projectName);

@@ -3,6 +3,7 @@ package com.mycelium.model;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 
@@ -16,6 +17,9 @@ public class ProjectNode {
 
     @Id
     private String name;
+
+    @Version
+    private Long version;
 
     public ProjectNode(String name) {
         this.name = name;

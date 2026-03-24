@@ -12,13 +12,11 @@ import java.util.Objects;
 @Setter
 public class FollowsRelationship {
 
+    @TargetNode
+    private final UserNode targetUser;
     @Id
     @GeneratedValue
     private Long id;
-
-    @TargetNode
-    private final UserNode targetUser;
-
     @Property("startDate")
     private LocalDate startDate;
     @Property("endDate")

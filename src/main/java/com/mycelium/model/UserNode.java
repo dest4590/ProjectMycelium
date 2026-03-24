@@ -3,6 +3,7 @@ package com.mycelium.model;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Property;
@@ -22,11 +23,17 @@ public class UserNode {
     @Id
     private String username;
 
+    @Version
+    private Long version;
+
     @Property("isPrivate")
     private boolean isPrivate;
 
     @Property("isScanned")
     private boolean isScanned = false;
+
+    @Property("isHidden")
+    private boolean isHidden = false;
 
     @Property("lastScanned")
     private LocalDate lastScanned;
@@ -66,6 +73,7 @@ public class UserNode {
                 "username='" + username + '\'' +
                 ", isPrivate=" + isPrivate +
                 ", isScanned=" + isScanned +
+                ", isHidden=" + isHidden +
                 '}';
     }
 }

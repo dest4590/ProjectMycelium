@@ -36,4 +36,20 @@ public class UserController {
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @PatchMapping("/{username}/hidden")
+    @Transactional
+    public ResponseEntity<Void> updateUserHiddenStatus(
+            @PathVariable String username,
+            @RequestParam boolean hidden) {
+
+        return userRepository.findByUsername(username)
+                .map(user -> {
+                    user.setHidden(hidden);
+                    userRepository.save(user);
+                    updateService.sendUserUpdate(user, "manual-update");
+                    return ResponseEntity.ok().<Void>build();
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
 }

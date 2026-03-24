@@ -63,7 +63,8 @@ public class GraphController {
                 .map(user -> Map.of(
                         "username", user.getUsername(),
                         "isPrivate", user.isPrivate(),
-                        "scanned", user.isScanned()
+                        "scanned", user.isScanned(),
+                        "isHidden", user.isHidden()
                 ))
                 .distinct()
                 .toList();
