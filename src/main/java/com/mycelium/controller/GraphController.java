@@ -49,8 +49,10 @@ public class GraphController {
     @DeleteMapping("/{username}")
     @Transactional
     public ResponseEntity<Void> deleteUser(@PathVariable String username) {
-        userRepository.detachDeleteUserByUsername(username);
-        updateService.sendNodeDeletion(username, "UserNode");
+        List<String> deletedUsernames = userRepository.detachDeleteUserByUsername(username);
+        for (String deletedName : deletedUsernames) {
+            updateService.sendNodeDeletion(deletedName, "UserNode");
+        }
         return ResponseEntity.ok().build();
     }
 
@@ -60,24 +62,28 @@ public class GraphController {
                 .collect(Collectors.toSet());
 
         var nodes = users.stream()
-                .map(user -> Map.of(
-                        "username", user.getUsername(),
-                        "isPrivate", user.isPrivate(),
-                        "scanned", user.isScanned(),
-                        "isHidden", user.isHidden(),
-                        "lastScanned", user.getLastScanned() != null ? user.getLastScanned().toString() : null
-                ))
+                .map(user -> {
+                    Map<String, Object> node = new java.util.HashMap<>();
+                    node.put("username", user.getUsername());
+                    node.put("isPrivate", user.isPrivate());
+                    node.put("scanned", user.isScanned());
+                    node.put("isHidden", user.isHidden());
+                    node.put("lastScanned", user.getLastScanned() != null ? user.getLastScanned().toString() : null);
+                    return node;
+                })
                 .distinct()
                 .toList();
 
         var edges = users.stream()
                 .flatMap(user -> user.getFollows().stream()
                         .filter(rel -> userNamesInChunk.contains(rel.getTargetUser().getUsername()))
-                        .map(rel -> Map.of(
-                                "source", user.getUsername(),
-                                "target", rel.getTargetUser().getUsername(),
-                                "active", rel.isActive()
-                        )))
+                        .map(rel -> {
+                            Map<String, Object> edge = new java.util.HashMap<>();
+                            edge.put("source", user.getUsername());
+                            edge.put("target", rel.getTargetUser().getUsername());
+                            edge.put("active", rel.isActive());
+                            return edge;
+                        }))
                 .distinct()
                 .toList();
 

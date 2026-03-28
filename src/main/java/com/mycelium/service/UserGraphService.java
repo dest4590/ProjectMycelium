@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -62,10 +61,8 @@ public class UserGraphService {
 
     @Transactional
     public void markUserAsScanned(String username, String taskId) {
+        userRepository.markAsScanned(username);
         userRepository.findByUsername(username).ifPresent(user -> {
-            user.setScanned(true);
-            user.setLastScanned(LocalDate.now());
-            userRepository.save(user);
             updateService.sendUserUpdate(user, taskId);
             log.info(">>> [TASK ID: {}] User {} has been marked as scanned.", taskId, username);
         });
@@ -73,11 +70,8 @@ public class UserGraphService {
 
     @Transactional
     public void markUserAsPrivateAndScanned(String username, String taskId) {
+        userRepository.markAsPrivateAndScanned(username);
         userRepository.findByUsername(username).ifPresent(user -> {
-            user.setPrivate(true);
-            user.setScanned(true);
-            user.setLastScanned(LocalDate.now());
-            userRepository.save(user);
             updateService.sendLog("Profile " + user.getUsername() + " is private — skipping", taskId);
             log.warn("... [TASK ID: {}] profile {} is private, saved to the database", taskId, username);
         });
@@ -86,9 +80,8 @@ public class UserGraphService {
     @Transactional
     public void handleScanError(String username, Exception e, String taskId) {
         log.error("### [TASK ID: {}] Error while scanning user {}: {}. Marking as 'broken'.", taskId, username, e.getMessage());
+        userRepository.markAsScannedOnly(username);
         userRepository.findByUsername(username).ifPresent(user -> {
-            user.setScanned(true);
-            userRepository.save(user);
             updateService.sendUserUpdate(user, taskId);
             updateService.sendLog("Error while scanning " + username + ": " + e.getMessage(), taskId);
         });

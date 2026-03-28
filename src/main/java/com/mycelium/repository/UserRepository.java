@@ -24,16 +24,20 @@ public interface UserRepository extends Neo4jRepository<UserNode, String> {
     @Query("""
             MATCH (targetUser:User {username: $username})
             OPTIONAL MATCH (follower:User)-[:FOLLOWS]->(targetUser)
-            WITH targetUser, follower
-            WITH targetUser, follower, size([(follower)--() WHERE () <> targetUser | 1]) as otherRelationshipsCount
-            FOREACH (f IN CASE WHEN follower IS NOT NULL AND otherRelationshipsCount = 0 THEN [follower] ELSE [] END |
-                DETACH DELETE f
-            )
+            WITH targetUser, follower, count { (follower)--(other) WHERE other <> targetUser } as otherRelationshipsCount
+            WITH targetUser, collect(DISTINCT CASE WHEN follower IS NOT NULL AND otherRelationshipsCount = 0 THEN follower.username ELSE null END) as deletedFollowerNames
             
-            WITH targetUser
+            WITH targetUser.username as targetName, [x IN deletedFollowerNames WHERE x IS NOT NULL] as filteredFollowerNames, targetUser
+            
+            OPTIONAL MATCH (f:User) WHERE f.username IN filteredFollowerNames
+            DETACH DELETE f
+            
+            WITH targetName, filteredFollowerNames, targetUser
             DETACH DELETE targetUser
+            
+            RETURN [targetName] + filteredFollowerNames
             """)
-    void detachDeleteUserByUsername(String username);
+    List<String> detachDeleteUserByUsername(String username);
 
     @Query("""
             MATCH (proj:Project {name: $projectName})<-[:BELONGS_TO]-(u:User)
@@ -107,8 +111,9 @@ public interface UserRepository extends Neo4jRepository<UserNode, String> {
             MERGE (u)-[r:FOLLOWS]->(newFollowing)
             ON CREATE SET r.startDate = date(), r.isActive = true
             ON MATCH SET r.isActive = true, r.endDate = null
+            RETURN count(u)
             """)
-    void updateFollowingRelationships(String username, Set<String> newFollowingUsernames, String projectName);
+    Integer updateFollowingRelationships(String username, Set<String> newFollowingUsernames, String projectName);
 
 
     @Query("""
@@ -129,6 +134,16 @@ public interface UserRepository extends Neo4jRepository<UserNode, String> {
             MERGE (newFollower)-[r:FOLLOWS]->(u)
             ON CREATE SET r.startDate = date(), r.isActive = true
             ON MATCH SET r.isActive = true, r.endDate = null
+            RETURN count(u)
             """)
-    void updateFollowerRelationships(String username, Set<String> newFollowerUsernames, String projectName);
+    Integer updateFollowerRelationships(String username, Set<String> newFollowerUsernames, String projectName);
+
+    @Query("MATCH (u:User {username: $username}) SET u.isScanned = true, u.lastScanned = date(), u.version = coalesce(u.version, 0) + 1 RETURN count(u)")
+    Integer markAsScanned(String username);
+
+    @Query("MATCH (u:User {username: $username}) SET u.isPrivate = true, u.isScanned = true, u.lastScanned = date(), u.version = coalesce(u.version, 0) + 1 RETURN count(u)")
+    Integer markAsPrivateAndScanned(String username);
+
+    @Query("MATCH (u:User {username: $username}) SET u.isScanned = true, u.version = coalesce(u.version, 0) + 1 RETURN count(u)")
+    Integer markAsScannedOnly(String username);
 }
