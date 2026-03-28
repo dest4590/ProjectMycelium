@@ -49,7 +49,7 @@ public class UserGraphService {
         }
 
         if (type.equals("followers") || type.equals("force") || type.equals("default")) {
-            List<UserNode> oldFollowerNodes = userRepository.findFollowersOf(username);
+            List<UserNode> oldFollowerNodes = userRepository.findFollowersOf(username, project.getName());
             Set<String> oldFollowerUsernames = oldFollowerNodes.stream().map(UserNode::getUsername).collect(Collectors.toSet());
 
             newFollowers.stream()

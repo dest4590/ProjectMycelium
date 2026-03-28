@@ -25,9 +25,18 @@ public class ScanController {
         if (projectName == null || projectName.trim().isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Project name must not be empty"));
         }
+        if (username == null || username.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Username must not be empty"));
+        }
+        if (!username.matches("[a-zA-Z0-9._]{1,30}")) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid Instagram username"));
+        }
+        if (depth < 0 || depth > 5) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Depth must be between 0 and 5"));
+        }
 
         String taskId = UUID.randomUUID().toString();
-        instaService.startRecursiveScan(username, depth, projectName, taskId, type);
+        instaService.startRecursiveScan(username.trim().toLowerCase(), depth, projectName, taskId, type);
 
         return ResponseEntity.ok(Map.of("taskId", taskId));
     }

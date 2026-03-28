@@ -16,16 +16,17 @@ public class UpdateService {
     }
 
     public void sendUserUpdate(UserNode user, String taskId) {
-        messagingTemplate.convertAndSend("/topic/updates", Map.of(
+        messagingTemplate.convertAndSend("/topic/updates", (Object) Map.of(
                 "type", "USER_NODE_UPDATE",
                 "taskId", taskId,
                 "username", user.getUsername(),
-                "isScanned", user.isScanned()
+                "isScanned", user.isScanned(),
+                "lastScanned", user.getLastScanned() != null ? user.getLastScanned().toString() : null
         ));
     }
 
     public void sendNewEdge(String source, String target, String taskId) {
-        messagingTemplate.convertAndSend("/topic/updates", Map.of(
+        messagingTemplate.convertAndSend("/topic/updates", (Object) Map.of(
                 "type", "NEW_EDGE",
                 "taskId", taskId,
                 "source", source,
@@ -34,7 +35,7 @@ public class UpdateService {
     }
 
     public void sendLog(String message, String taskId) {
-        messagingTemplate.convertAndSend("/topic/logs", Map.of(
+        messagingTemplate.convertAndSend("/topic/logs", (Object) Map.of(
                 "type", "LOG_MESSAGE",
                 "taskId", taskId,
                 "message", message
@@ -42,14 +43,14 @@ public class UpdateService {
     }
 
     public void sendStatus(StatusType status, String taskId) {
-        messagingTemplate.convertAndSend("/topic/status", Map.of(
+        messagingTemplate.convertAndSend("/topic/status", (Object) Map.of(
                 "type", status,
                 "taskId", taskId
         ));
     }
 
     public void sendNodeDeletion(String username, String taskId) {
-        messagingTemplate.convertAndSend("/topic/updates", Map.of(
+        messagingTemplate.convertAndSend("/topic/updates", (Object) Map.of(
                 "type", "NODE_DELETION",
                 "taskId", taskId,
                 "username", username

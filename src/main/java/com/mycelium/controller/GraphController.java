@@ -64,7 +64,8 @@ public class GraphController {
                         "username", user.getUsername(),
                         "isPrivate", user.isPrivate(),
                         "scanned", user.isScanned(),
-                        "isHidden", user.isHidden()
+                        "isHidden", user.isHidden(),
+                        "lastScanned", user.getLastScanned() != null ? user.getLastScanned().toString() : null
                 ))
                 .distinct()
                 .toList();
@@ -73,8 +74,8 @@ public class GraphController {
                 .flatMap(user -> user.getFollows().stream()
                         .filter(rel -> userNamesInChunk.contains(rel.getTargetUser().getUsername()))
                         .map(rel -> Map.of(
-                                "source", rel.getTargetUser().getUsername(),
-                                "target", user.getUsername(),
+                                "source", user.getUsername(),
+                                "target", rel.getTargetUser().getUsername(),
                                 "active", rel.isActive()
                         )))
                 .distinct()

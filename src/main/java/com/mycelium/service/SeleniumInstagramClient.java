@@ -34,8 +34,8 @@ public class SeleniumInstagramClient implements InstagramClient {
     private static final String DIALOG_WRAPPER_CSS = "div[style='height: auto; overflow: hidden auto;']";
     private static final String USERS_LIST_CSS = "a[role='link'] span._aaco";
     private static final String CLOSE_DIALOG_BUTTON_CSS = "button[type='button']._abl-";
-    public static int FOLLOWER_LIMIT = 700;
-    public static int FOLLOWING_LIMIT = 700;
+    public static volatile int FOLLOWER_LIMIT = 700;
+    public static volatile int FOLLOWING_LIMIT = 700;
     private final Gson gson = new Gson();
 
     private final UpdateService updateService;

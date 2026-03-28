@@ -10,8 +10,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
@@ -35,7 +34,7 @@ public class InstaService {
 
     @Async("taskExecutor")
     public void startRecursiveScan(String startUsername, int maxDepth, String projectName, String taskId, String type) {
-        log.info(">>> [TASK ID: {}] STARTING RECURSIVE SCANNING...", taskId);
+        log.info(">>> [TASK ID: {}] STARTING SCAN...", taskId);
         updateService.sendStatus(StatusType.SCAN_STARTED, taskId);
         updateService.sendLog(String.format("project '%s': starting scan of %s with depth %d (type: %s)", projectName, startUsername, maxDepth, type), taskId);
 
@@ -47,10 +46,36 @@ public class InstaService {
             ProjectNode project = projectRepository.findByName(projectName)
                     .orElseGet(() -> projectRepository.save(new ProjectNode(projectName)));
 
-            scanUserRecursive(startUsername, 0, maxDepth, project, taskId, driver, type);
+            record QueueEntry(String username, int depth) {
+            }
 
-            log.info(">>> [TASK ID: {}] RECURSIVE SCANNING COMPLETED <<<", taskId);
-            updateService.sendLog("recursive scanning completed", taskId);
+            Deque<QueueEntry> queue = new ArrayDeque<>();
+            Set<String> visited = new LinkedHashSet<>();
+            queue.add(new QueueEntry(startUsername, 0));
+
+            while (!queue.isEmpty()) {
+                QueueEntry entry = queue.poll();
+                if (entry.depth() > maxDepth || visited.contains(entry.username())) {
+                    continue;
+                }
+                visited.add(entry.username());
+
+                try {
+                    Set<String> nextUsers = processUser(entry.username(), project, taskId, driver, type);
+                    if (nextUsers != null && entry.depth() < maxDepth) {
+                        for (String next : nextUsers) {
+                            if (!visited.contains(next)) {
+                                queue.add(new QueueEntry(next, entry.depth() + 1));
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    log.error("### [TASK ID: {}] error processing {}: {}", taskId, entry.username(), e.getMessage());
+                }
+            }
+
+            log.info(">>> [TASK ID: {}] SCANNING COMPLETED <<<", taskId);
+            updateService.sendLog("scanning completed", taskId);
             updateService.sendStatus(StatusType.SCAN_COMPLETED, taskId);
         } catch (Exception e) {
             log.error("### [TASK ID: {}] CRITICAL ERROR in startRecursiveScan", taskId, e);
@@ -61,24 +86,6 @@ public class InstaService {
                 driver.quit();
                 log.info(">>> [TASK ID: {}] Selenium driver has been closed.", taskId);
             }
-        }
-    }
-
-    private void scanUserRecursive(String username, int currentDepth, int maxDepth, ProjectNode project, String taskId, WebDriver driver, String type) {
-        if (currentDepth > maxDepth) {
-            return;
-        }
-        try {
-            Set<String> usersToScanNext = processUser(username, project, taskId, driver, type);
-            if (usersToScanNext == null) {
-                return;
-            }
-            log.info(">>> [TASK ID: {}] proceeding to the next users from {}...", taskId, username);
-            for (String userToScan : usersToScanNext) {
-                scanUserRecursive(userToScan, currentDepth + 1, maxDepth, project, taskId, driver, "default");
-            }
-        } catch (Exception e) {
-            log.error("### [TASK ID: {}] error at recursion level for {}: {}", taskId, username, e.getMessage());
         }
     }
 
