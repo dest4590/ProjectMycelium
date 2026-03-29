@@ -95,6 +95,8 @@ public interface UserRepository extends Neo4jRepository<UserNode, String> {
 
     @Query("""
             MATCH (u:User {username: $username})
+            SET u.version = coalesce(u.version, 0) + 1
+            WITH u
             
             OPTIONAL MATCH (u)-[r:FOLLOWS]->(oldFollowing:User)
             WHERE NOT oldFollowing.username IN $newFollowingUsernames
@@ -105,7 +107,7 @@ public interface UserRepository extends Neo4jRepository<UserNode, String> {
             
             MERGE (p:Project {name: $projectName})
             MERGE (newFollowing:User {username: newFollowingUsername})
-            ON CREATE SET newFollowing.isScanned = false
+            ON CREATE SET newFollowing.isScanned = false, newFollowing.version = 0
             MERGE (newFollowing)-[:BELONGS_TO]->(p)
             
             MERGE (u)-[r:FOLLOWS]->(newFollowing)
@@ -118,6 +120,8 @@ public interface UserRepository extends Neo4jRepository<UserNode, String> {
 
     @Query("""
             MATCH (u:User {username: $username})
+            SET u.version = coalesce(u.version, 0) + 1
+            WITH u
             
             OPTIONAL MATCH (oldFollower:User)-[r:FOLLOWS]->(u)
             WHERE NOT oldFollower.username IN $newFollowerUsernames
@@ -128,7 +132,7 @@ public interface UserRepository extends Neo4jRepository<UserNode, String> {
             
             MERGE (p:Project {name: $projectName})
             MERGE (newFollower:User {username: newFollowerUsername})
-            ON CREATE SET newFollower.isScanned = false
+            ON CREATE SET newFollower.isScanned = false, newFollower.version = 0
             MERGE (newFollower)-[:BELONGS_TO]->(p)
             
             MERGE (newFollower)-[r:FOLLOWS]->(u)
