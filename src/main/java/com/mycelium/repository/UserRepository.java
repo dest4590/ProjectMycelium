@@ -86,14 +86,6 @@ public interface UserRepository extends Neo4jRepository<UserNode, String> {
     List<String> findShortestPathInProject(String startUsername, String endUsername, String projectName);
 
     @Query("""
-            MATCH (follower:User)-[:FOLLOWS]->(u:User {username: $username})
-            WHERE (follower)-[:BELONGS_TO]->(:Project {name: $projectName})
-            RETURN follower
-            """)
-    List<UserNode> findFollowersOf(String username, String projectName);
-
-
-    @Query("""
             MATCH (u:User {username: $username})
             SET u.version = coalesce(u.version, 0) + 1
             WITH u
@@ -142,12 +134,18 @@ public interface UserRepository extends Neo4jRepository<UserNode, String> {
             """)
     Integer updateFollowerRelationships(String username, Set<String> newFollowerUsernames, String projectName);
 
-    @Query("MATCH (u:User {username: $username}) SET u.isScanned = true, u.lastScanned = date(), u.version = coalesce(u.version, 0) + 1 RETURN count(u)")
-    Integer markAsScanned(String username);
+    @Query("MATCH (u:User {username: $username})-[r:FOLLOWS]->(f:User) WHERE r.isActive <> false RETURN collect(f.username)")
+    Set<String> findActiveFollowingUsernames(String username);
 
-    @Query("MATCH (u:User {username: $username}) SET u.isPrivate = true, u.isScanned = true, u.lastScanned = date(), u.version = coalesce(u.version, 0) + 1 RETURN count(u)")
-    Integer markAsPrivateAndScanned(String username);
+    @Query("MATCH (follower:User)-[r:FOLLOWS]->(u:User {username: $username}) WHERE r.isActive <> false RETURN collect(follower.username)")
+    Set<String> findActiveFollowerUsernames(String username);
 
-    @Query("MATCH (u:User {username: $username}) SET u.isScanned = true, u.version = coalesce(u.version, 0) + 1 RETURN count(u)")
-    Integer markAsScannedOnly(String username);
+    @Query("MATCH (u:User {username: $username}) SET u.isScanned = true, u.lastScanned = date(), u.version = coalesce(u.version, 0) + 1 RETURN u")
+    Optional<UserNode> markAsScanned(String username);
+
+    @Query("MATCH (u:User {username: $username}) SET u.isPrivate = true, u.isScanned = true, u.lastScanned = date(), u.version = coalesce(u.version, 0) + 1 RETURN u")
+    Optional<UserNode> markAsPrivateAndScanned(String username);
+
+    @Query("MATCH (u:User {username: $username}) SET u.isScanned = true, u.version = coalesce(u.version, 0) + 1 RETURN u")
+    Optional<UserNode> markAsScannedOnly(String username);
 }

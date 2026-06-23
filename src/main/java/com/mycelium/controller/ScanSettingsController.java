@@ -12,8 +12,8 @@ public class ScanSettingsController {
     @GetMapping("/limits")
     public ResponseEntity<Map<String, Integer>> getMaxLimits() {
         return ResponseEntity.ok(Map.of(
-                "maxFollowers", SeleniumInstagramClient.FOLLOWER_LIMIT,
-                "maxFollowing", SeleniumInstagramClient.FOLLOWING_LIMIT
+                "maxFollowers", SeleniumInstagramClient.followerLimit,
+                "maxFollowing", SeleniumInstagramClient.followingLimit
         ));
     }
 
@@ -23,7 +23,7 @@ public class ScanSettingsController {
             return ResponseEntity.badRequest().body("the maximum number of followers must be greater than zero");
         }
 
-        SeleniumInstagramClient.FOLLOWER_LIMIT = value;
+        SeleniumInstagramClient.followerLimit = value;
         return ResponseEntity.ok("the maximum number of followers has been updated");
     }
 
@@ -33,7 +33,7 @@ public class ScanSettingsController {
             return ResponseEntity.badRequest().body("the maximum number of following must be greater than zero");
         }
 
-        SeleniumInstagramClient.FOLLOWING_LIMIT = value;
+        SeleniumInstagramClient.followingLimit = value;
         return ResponseEntity.ok("the maximum number of following has been updated");
     }
 }

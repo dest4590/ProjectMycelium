@@ -35,3 +35,4 @@ bin/
 out/
 insta_cookies*
 .env
+neo4j_data/

@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -51,7 +52,7 @@ public class GraphController {
     public ResponseEntity<Void> deleteUser(@PathVariable String username) {
         List<String> deletedUsernames = userRepository.detachDeleteUserByUsername(username);
         for (String deletedName : deletedUsernames) {
-            updateService.sendNodeDeletion(deletedName, "UserNode");
+            updateService.sendNodeDeletion(deletedName, "manual-delete");
         }
         return ResponseEntity.ok().build();
     }
@@ -63,7 +64,7 @@ public class GraphController {
 
         var nodes = users.stream()
                 .map(user -> {
-                    Map<String, Object> node = new java.util.HashMap<>();
+                    Map<String, Object> node = new HashMap<>();
                     node.put("username", user.getUsername());
                     node.put("isPrivate", user.isPrivate());
                     node.put("scanned", user.isScanned());
@@ -78,7 +79,7 @@ public class GraphController {
                 .flatMap(user -> user.getFollows().stream()
                         .filter(rel -> userNamesInChunk.contains(rel.getTargetUser().getUsername()))
                         .map(rel -> {
-                            Map<String, Object> edge = new java.util.HashMap<>();
+                            Map<String, Object> edge = new HashMap<>();
                             edge.put("source", user.getUsername());
                             edge.put("target", rel.getTargetUser().getUsername());
                             edge.put("active", rel.isActive());
