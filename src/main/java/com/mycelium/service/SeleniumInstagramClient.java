@@ -44,9 +44,16 @@ public class SeleniumInstagramClient implements InstagramClient {
 
     @Override
     public WebDriver setupSelenium() {
-        System.setProperty("webdriver.chrome.driver", "chromedriver.exe");
         ChromeOptions options = new ChromeOptions();
-        options.addArguments("--disable-notifications", "--mute-audio");
+        options.addArguments(
+                "--headless=new",
+                "--disable-gpu",
+                "--no-sandbox",
+                "--disable-dev-shm-usage",
+                "--disable-notifications",
+                "--mute-audio",
+                "--window-size=1920,1080"
+        );
         return new ChromeDriver(options);
     }
 

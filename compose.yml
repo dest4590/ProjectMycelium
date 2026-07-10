@@ -14,5 +14,17 @@ services:
     volumes:
       - ./neo4j_data:/data
 
-volumes:
-  neo4j_data:
+  backend:
+    build: .
+    container_name: mycelium-backend
+    restart: unless-stopped
+    ports:
+      - "8971:8080"
+    env_file:
+      - .env
+    environment:
+      SPRING_NEO4J_URI: neo4j://neo4j:7687
+    depends_on:
+      - neo4j
+    volumes:
+      - ./insta_cookies_main.json:/app/insta_cookies_main.json
